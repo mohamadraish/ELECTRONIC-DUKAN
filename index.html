@@ -1,1 +1,61 @@
-<!-- Flipkart-style homepage with Firebase dynamic product loading -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Electronic Dukan</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <div class="logo">ELECTRONIC DUKAN</div>
+    <input type="search" id="search" placeholder="Search products..."/>
+    <div class="cart-icon">
+      <a href="cart.html">🛒 Cart (<span id="cart-count">0</span>)</a>
+    </div>
+  </nav>
+
+  <main>
+    <div id="product-grid" class="grid"></div>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+  <script src="firebase.js"></script>
+  <script>
+    const dbRef = firebase.database().ref("products");
+    const grid = document.getElementById("product-grid");
+    const cartCount = document.getElementById("cart-count");
+
+    function updateCartCount() {
+      const cart = JSON.parse(localStorage.getItem("cart")) || [];
+      cartCount.textContent = cart.length;
+    }
+
+    dbRef.on("value", snapshot => {
+      grid.innerHTML = "";
+      snapshot.forEach(child => {
+        const p = child.val();
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <img src="${p.imageURL}" alt="${p.name}"/>
+          <h3>${p.name}</h3>
+          <p>₹${p.price}</p>
+          <button onclick="addToCart('${child.key}')">Add to Cart</button>
+        `;
+        grid.appendChild(card);
+      });
+      updateCartCount();
+    });
+
+    function addToCart(productId) {
+      const cart = JSON.parse(localStorage.getItem("cart")) || [];
+      cart.push(productId);
+      localStorage.setItem("cart", JSON.stringify(cart));
+      updateCartCount();
+      alert("Product added to cart!");
+    }
+  </script>
+</body>
+</html>
