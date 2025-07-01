@@ -1,1 +1,50 @@
-<!-- Order submission form saving to Firebase -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>New Orders - Admin Panel</title>
+</head>
+<body>
+  <h2>New Orders</h2>
+  <ul id="orderList"></ul>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore, collection, getDocs, deleteDoc, doc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAmSKF1LkuQLehvht-T_w9wkfujHwFi2H0",
+      authDomain: "electronic-43c0b.firebaseapp.com",
+      projectId: "electronic-43c0b",
+      storageBucket: "electronic-43c0b.appspot.com",
+      messagingSenderId: "928013217742",
+      appId: "1:928013217742:web:f3252242287c9034db059f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function loadOrders() {
+      const ordersSnapshot = await getDocs(collection(db, "orders"));
+      const list = document.getElementById("orderList");
+      list.innerHTML = "";
+      ordersSnapshot.forEach((docSnap) => {
+        const order = docSnap.data();
+        const li = document.createElement("li");
+        li.innerHTML = `${order.customer} - ${order.product} - ₹${order.price} 
+          <button onclick="deleteOrder('${docSnap.id}')">Delete</button>`;
+        list.appendChild(li);
+      });
+    }
+
+    window.deleteOrder = async function(id) {
+      await deleteDoc(doc(db, "orders", id));
+      loadOrders();
+    }
+
+    window.onload = loadOrders;
+  </script>
+</body>
+</html>
