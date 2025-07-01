@@ -1,21 +1,22 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Panel - ELECTRONIC DUKAN</title>
 </head>
 <body>
   <h2>Admin Login</h2>
-  <input type="text" id="username" placeholder="Username">
-  <input type="password" id="password" placeholder="Password">
+  <input type="text" id="username" placeholder="Username" />
+  <input type="password" id="password" placeholder="Password" />
   <button onclick="login()">Login</button>
 
   <div id="adminPanel" style="display: none;">
     <h3>Add Product</h3>
-    <input type="text" id="name" placeholder="Product Name">
-    <input type="number" id="price" placeholder="Price">
-    <input type="number" id="stock" placeholder="Stock">
+    <input type="text" id="name" placeholder="Product Name" />
+    <input type="number" id="price" placeholder="Price" />
+    <input type="number" id="stock" placeholder="Stock" />
     <button onclick="addProduct()">Add Product</button>
 
     <h3>All Products</h3>
@@ -25,7 +26,12 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import {
-      getFirestore, collection, addDoc, deleteDoc, doc, getDocs
+      getFirestore,
+      collection,
+      addDoc,
+      deleteDoc,
+      doc,
+      getDocs
     } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -40,46 +46,58 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    function login() {
-      const u = document.getElementById('username').value;
-      const p = document.getElementById('password').value;
-      if (u === 'raees123' && p === '123456') {
-        document.getElementById('adminPanel').style.display = 'block';
+    // ✅ Functions should be attached to window to be called from HTML
+    window.login = function () {
+      const u = document.getElementById("username").value;
+      const p = document.getElementById("password").value;
+      if (u === "raees123" && p === "123456") {
+        document.getElementById("adminPanel").style.display = "block";
+        loadProducts(); // Show products after login
       } else {
-        alert('Wrong username or password');
+        alert("Wrong username or password");
       }
-    }
+    };
 
-    async function addProduct() {
-      const name = document.getElementById('name').value;
-      const price = parseInt(document.getElementById('price').value);
-      const stock = parseInt(document.getElementById('stock').value);
-      await addDoc(collection(db, 'products'), {
+    window.addProduct = async function () {
+      const name = document.getElementById("name").value;
+      const price = parseInt(document.getElementById("price").value);
+      const stock = parseInt(document.getElementById("stock").value);
+
+      if (!name || isNaN(price) || isNaN(stock)) {
+        alert("Please fill all fields correctly.");
+        return;
+      }
+
+      await addDoc(collection(db, "products"), {
         name,
         price,
         available: stock > 0
       });
-      loadProducts();
-    }
 
-    async function loadProducts() {
-      const querySnapshot = await getDocs(collection(db, 'products'));
-      const list = document.getElementById('productList');
-      list.innerHTML = '';
+      loadProducts();
+    };
+
+    window.loadProducts = async function () {
+      const querySnapshot = await getDocs(collection(db, "products"));
+      const list = document.getElementById("productList");
+      list.innerHTML = "";
+
       querySnapshot.forEach((docSnap) => {
         const product = docSnap.data();
-        const li = document.createElement('li');
-        li.innerHTML = `${product.name} - ₹${product.price} - ${product.available ? 'Available' : 'Unavailable'} <button onclick="deleteProduct('${docSnap.id}')">Delete</button>`;
+        const li = document.createElement("li");
+        li.innerHTML = `
+          ${product.name} - ₹${product.price} - 
+          ${product.available ? "Available" : "Unavailable"} 
+          <button onclick="deleteProduct('${docSnap.id}')">Delete</button>
+        `;
         list.appendChild(li);
       });
-    }
+    };
 
-    async function deleteProduct(id) {
-      await deleteDoc(doc(db, 'products', id));
+    window.deleteProduct = async function (id) {
+      await deleteDoc(doc(db, "products", id));
       loadProducts();
-    }
-
-    window.onload = loadProducts;
+    };
   </script>
 </body>
 </html>
