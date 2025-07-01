@@ -1,54 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Panel</title>
-  <link rel="stylesheet" href="style.css"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - ELECTRONIC DUKAN</title>
 </head>
 <body>
-  <nav class="navbar"><div class="logo">Admin Panel</div></nav>
-  <main style="padding:20px">
-    <h2>Add New Product</h2>
-    <input type="text" id="pname" placeholder="Product name"/>
-    <input type="text" id="pimage" placeholder="Image URL"/>
-    <input type="number" id="pprice" placeholder="Price"/>
+  <h2>Admin Login</h2>
+  <input type="text" id="username" placeholder="Username">
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+
+  <div id="adminPanel" style="display: none;">
+    <h3>Add Product</h3>
+    <input type="text" id="name" placeholder="Product Name">
+    <input type="number" id="price" placeholder="Price">
+    <input type="number" id="stock" placeholder="Stock">
     <button onclick="addProduct()">Add Product</button>
 
-    <h2 style="margin-top:30px">All Orders</h2>
-    <div id="orders"></div>
-  </main>
+    <h3>All Products</h3>
+    <ul id="productList"></ul>
+  </div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-  <script src="firebase.js"></script>
-  <script>
-    const prodRef = firebase.database().ref("products");
-    const orderRef = firebase.database().ref("orders");
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore, collection, addDoc, deleteDoc, doc, getDocs
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    function addProduct() {
-      const name = document.getElementById("pname").value;
-      const imageURL = document.getElementById("pimage").value;
-      const price = document.getElementById("pprice").value;
-      prodRef.push({ name, imageURL, price });
-      alert("Product added!");
+    const firebaseConfig = {
+      apiKey: "AIzaSyAmSKF1LkuQLehvht-T_w9wkfujHwFi2H0",
+      authDomain: "electronic-43c0b.firebaseapp.com",
+      projectId: "electronic-43c0b",
+      storageBucket: "electronic-43c0b.appspot.com",
+      messagingSenderId: "928013217742",
+      appId: "1:928013217742:web:f3252242287c9034db059f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    function login() {
+      const u = document.getElementById('username').value;
+      const p = document.getElementById('password').value;
+      if (u === 'raees123' && p === '123456') {
+        document.getElementById('adminPanel').style.display = 'block';
+      } else {
+        alert('Wrong username or password');
+      }
     }
 
-    orderRef.on("value", snap => {
-      const orders = document.getElementById("orders");
-      orders.innerHTML = "";
-      snap.forEach(child => {
-        const div = document.createElement("div");
-        div.className = "card";
-        div.innerHTML = "🛒 Order ID: " + child.key + 
-          " <button onclick=\"deleteOrder('"+child.key+"')\">Delete</button>";
-        orders.appendChild(div);
+    async function addProduct() {
+      const name = document.getElementById('name').value;
+      const price = parseInt(document.getElementById('price').value);
+      const stock = parseInt(document.getElementById('stock').value);
+      await addDoc(collection(db, 'products'), {
+        name,
+        price,
+        available: stock > 0
       });
-    });
-
-    function deleteOrder(id) {
-      firebase.database().ref("orders/" + id).remove();
+      loadProducts();
     }
+
+    async function loadProducts() {
+      const querySnapshot = await getDocs(collection(db, 'products'));
+      const list = document.getElementById('productList');
+      list.innerHTML = '';
+      querySnapshot.forEach((docSnap) => {
+        const product = docSnap.data();
+        const li = document.createElement('li');
+        li.innerHTML = `${product.name} - ₹${product.price} - ${product.available ? 'Available' : 'Unavailable'} <button onclick="deleteProduct('${docSnap.id}')">Delete</button>`;
+        list.appendChild(li);
+      });
+    }
+
+    async function deleteProduct(id) {
+      await deleteDoc(doc(db, 'products', id));
+      loadProducts();
+    }
+
+    window.onload = loadProducts;
   </script>
 </body>
 </html>
+
