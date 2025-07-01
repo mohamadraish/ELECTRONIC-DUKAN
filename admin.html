@@ -1,1 +1,54 @@
-<!-- Admin login + Add product + New orders list with delete option -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <nav class="navbar"><div class="logo">Admin Panel</div></nav>
+  <main style="padding:20px">
+    <h2>Add New Product</h2>
+    <input type="text" id="pname" placeholder="Product name"/>
+    <input type="text" id="pimage" placeholder="Image URL"/>
+    <input type="number" id="pprice" placeholder="Price"/>
+    <button onclick="addProduct()">Add Product</button>
+
+    <h2 style="margin-top:30px">All Orders</h2>
+    <div id="orders"></div>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+  <script src="firebase.js"></script>
+  <script>
+    const prodRef = firebase.database().ref("products");
+    const orderRef = firebase.database().ref("orders");
+
+    function addProduct() {
+      const name = document.getElementById("pname").value;
+      const imageURL = document.getElementById("pimage").value;
+      const price = document.getElementById("pprice").value;
+      prodRef.push({ name, imageURL, price });
+      alert("Product added!");
+    }
+
+    orderRef.on("value", snap => {
+      const orders = document.getElementById("orders");
+      orders.innerHTML = "";
+      snap.forEach(child => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.innerHTML = "🛒 Order ID: " + child.key + 
+          " <button onclick=\"deleteOrder('"+child.key+"')\">Delete</button>";
+        orders.appendChild(div);
+      });
+    });
+
+    function deleteOrder(id) {
+      firebase.database().ref("orders/" + id).remove();
+    }
+  </script>
+</body>
+</html>

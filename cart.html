@@ -1,1 +1,47 @@
-<!-- Cart page showing items added by user -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cart</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <nav class="navbar"><div class="logo">🛒 Your Cart</div></nav>
+  <main>
+    <div id="cart-items" class="grid"></div>
+    <button onclick="placeOrder()">Place Order</button>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+  <script src="firebase.js"></script>
+  <script>
+    const cart = JSON.parse(localStorage.getItem("cart")) || [];
+    const dbRef = firebase.database().ref("products");
+    const orderRef = firebase.database().ref("orders");
+    const container = document.getElementById("cart-items");
+
+    dbRef.once("value").then(snapshot => {
+      cart.forEach(id => {
+        const product = snapshot.child(id).val();
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = \`
+          <img src="\${product.imageURL}" />
+          <h3>\${product.name}</h3>
+          <p>₹\${product.price}</p>
+        \`;
+        container.appendChild(card);
+      });
+    });
+
+    function placeOrder() {
+      orderRef.push({ cart, timestamp: Date.now() });
+      localStorage.removeItem("cart");
+      alert("Order placed!");
+      location.href = "index.html";
+    }
+  </script>
+</body>
+</html>
